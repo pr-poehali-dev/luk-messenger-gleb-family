@@ -1,6 +1,70 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Icon from "@/components/ui/icon";
 
+// ── SPLASH SCREEN ──────────────────────────────────────────────────
+function SplashScreen({ onDone }: { onDone: () => void }) {
+  const [phase, setPhase] = useState<"in" | "out">("in");
+
+  useEffect(() => {
+    const outTimer = window.setTimeout(() => setPhase("out"), 2200);
+    const doneTimer = window.setTimeout(() => onDone(), 2650);
+    return () => { clearTimeout(outTimer); clearTimeout(doneTimer); };
+  }, [onDone]);
+
+  return (
+    <div
+      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden ${phase === "out" ? "splash-out" : ""}`}
+      style={{ background: "var(--luk-bg)" }}
+    >
+      {/* Ambient orbs */}
+      <div className="orb-1 absolute w-72 h-72 rounded-full opacity-30 blur-3xl pointer-events-none"
+        style={{ background: "radial-gradient(circle, #9B5CFF, transparent 70%)", top: "10%", left: "5%" }} />
+      <div className="orb-2 absolute w-64 h-64 rounded-full opacity-25 blur-3xl pointer-events-none"
+        style={{ background: "radial-gradient(circle, #FF5CF1, transparent 70%)", bottom: "15%", right: "5%" }} />
+      <div className="absolute w-48 h-48 rounded-full opacity-20 blur-2xl pointer-events-none"
+        style={{ background: "radial-gradient(circle, #5CF1FF, transparent 70%)", bottom: "30%", left: "20%" }} />
+
+      {/* Logo block */}
+      <div className="splash-logo flex flex-col items-center gap-5">
+        {/* Icon */}
+        <div className="relative">
+          <div className="w-28 h-28 rounded-[2rem] flex items-center justify-center shadow-2xl"
+            style={{ background: "linear-gradient(135deg, #6B2FE8, #B84CF7, #FF5CF1)", boxShadow: "0 0 60px #9B5CFF60, 0 20px 60px #00000060" }}>
+            <span className="text-5xl select-none">✉️</span>
+          </div>
+          {/* Glow ring */}
+          <div className="absolute inset-0 rounded-[2rem] opacity-50 pointer-events-none"
+            style={{ boxShadow: "0 0 0 1px rgba(155,92,255,0.4), 0 0 40px rgba(155,92,255,0.3)" }} />
+        </div>
+
+        {/* Name */}
+        <div className="flex flex-col items-center gap-1">
+          <h1 className="shimmer-text text-6xl font-black tracking-tight leading-none" style={{ fontFamily: "'Golos Text', sans-serif" }}>
+            LUK
+          </h1>
+          <p className="splash-tagline text-white/45 text-sm tracking-[0.25em] uppercase font-medium">
+            Messenger
+          </p>
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div className="absolute bottom-16 left-1/2 -translate-x-1/2 w-40">
+        <div className="w-full h-0.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
+          <div className="splash-progress h-full rounded-full" style={{ background: "linear-gradient(90deg, #9B5CFF, #FF5CF1)", width: "0%" }} />
+        </div>
+        {/* Loader dots */}
+        <div className="flex items-center justify-center gap-2 mt-5">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="splash-dot w-1.5 h-1.5 rounded-full"
+              style={{ background: "var(--luk-purple)", animationDelay: `${i * 0.2}s` }} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── TYPES ──────────────────────────────────────────────────────────
 type ContactId = "gleb" | "mamulya" | "papa" | "sestra";
 type Screen = "chats" | "contacts" | "calls" | "settings" | "profile" | "chat";
@@ -706,6 +770,7 @@ function SearchBar({ value, onChange }: { value: string; onChange: (v: string) =
 
 // ── MAIN APP ───────────────────────────────────────────────────────
 export default function Index() {
+  const [showSplash, setShowSplash] = useState(true);
   const [screen, setScreen] = useState<Screen>("chats");
   const [activeChat, setActiveChat] = useState<ContactId | null>(null);
   const [search, setSearch] = useState("");
@@ -860,6 +925,9 @@ export default function Index() {
 
   return (
     <div className="flex flex-col h-screen overflow-hidden" style={{ background: "var(--luk-bg)" }}>
+      {/* Splash */}
+      {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
+
       {/* Overlay screens */}
       {callScreen && <CallScreen contact={getContact(callScreen)} onEnd={endCall} />}
       {incomingCall && !callScreen && (
