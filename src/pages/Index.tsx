@@ -25,16 +25,46 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
         style={{ background: "radial-gradient(circle, #5CF1FF, transparent 70%)", bottom: "30%", left: "20%" }} />
 
       {/* Logo block */}
-      <div className="splash-logo flex flex-col items-center gap-5">
-        {/* Icon */}
+      <div className="splash-logo flex flex-col items-center gap-6">
+        {/* Minecraft L */}
         <div className="relative">
-          <div className="w-28 h-28 rounded-[2rem] flex items-center justify-center shadow-2xl"
-            style={{ background: "linear-gradient(135deg, #6B2FE8, #B84CF7, #FF5CF1)", boxShadow: "0 0 60px #9B5CFF60, 0 20px 60px #00000060" }}>
-            <span className="text-5xl select-none">✉️</span>
+          <div
+            className="w-32 h-32 flex items-center justify-center"
+            style={{
+              background: "linear-gradient(135deg, #1a0a3a, #2d1060)",
+              border: "4px solid #9B5CFF",
+              boxShadow: "0 0 0 2px #5B1FD0, 0 0 40px #9B5CFF80, 0 0 80px #9B5CFF40, inset 0 0 20px #9B5CFF20",
+              imageRendering: "pixelated",
+            }}
+          >
+            {/* Пиксельная буква L (5×7 сетка, каждый "пиксель" = 10px) */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 10px)", gridTemplateRows: "repeat(7, 10px)", gap: "2px" }}>
+              {[
+                1,0,0,0,
+                1,0,0,0,
+                1,0,0,0,
+                1,0,0,0,
+                1,0,0,0,
+                1,0,0,0,
+                1,1,1,1,
+              ].map((on, i) => (
+                <div key={i} style={{
+                  width: 10, height: 10,
+                  background: on
+                    ? "linear-gradient(135deg, #C084FC, #9B5CFF)"
+                    : "transparent",
+                  boxShadow: on ? "0 0 6px #9B5CFF, 0 0 2px #fff4" : "none",
+                }} />
+              ))}
+            </div>
           </div>
-          {/* Glow ring */}
-          <div className="absolute inset-0 rounded-[2rem] opacity-50 pointer-events-none"
-            style={{ boxShadow: "0 0 0 1px rgba(155,92,255,0.4), 0 0 40px rgba(155,92,255,0.3)" }} />
+          {/* Угловые пиксели — майнкрафт-стиль */}
+          {[
+            { top: -4, left: -4 }, { top: -4, right: -4 },
+            { bottom: -4, left: -4 }, { bottom: -4, right: -4 },
+          ].map((pos, i) => (
+            <div key={i} className="absolute w-3 h-3" style={{ background: "#9B5CFF", ...pos }} />
+          ))}
         </div>
 
         {/* Name */}
