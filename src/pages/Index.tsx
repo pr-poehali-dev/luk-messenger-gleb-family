@@ -238,8 +238,96 @@ function TypingIndicator() {
   );
 }
 
+// ── VOICE SYNTH ────────────────────────────────────────────────────
+// Уникальный профиль голоса для каждого контакта
+const VOICE_PROFILES: Record<string, { pitch: number; speed: number; timbre: number; vibrato: number }> = {
+  gleb:    { pitch: 180,  speed: 1.15, timbre: 0.6, vibrato: 3.5 }, // молодой парень — высокий, быстрый
+  mamulya: { pitch: 250,  speed: 0.88, timbre: 0.3, vibrato: 5.0 }, // мама — мягкий, плавный
+  papa:    { pitch: 100,  speed: 0.78, timbre: 0.8, vibrato: 2.0 }, // папа — низкий, спокойный
+  sestra:  { pitch: 290,  speed: 1.25, timbre: 0.4, vibrato: 6.0 }, // сестра — звонкий, живой
+  me:      { pitch: 160,  speed: 1.0,  timbre: 0.5, vibrato: 3.0 },
+};
+
+function playVoiceSound(contactId: string, durationSec: number, onEnd: () => void) {
+  type AudioContextConstructor = typeof AudioContext;
+  const AudioCtx: AudioContextConstructor = window.AudioContext || (window as { webkitAudioContext?: AudioContextConstructor }).webkitAudioContext!;
+  const ctx = new AudioCtx();
+  const profile = VOICE_PROFILES[contactId] || VOICE_PROFILES.me;
+  const playDur = Math.min(durationSec, 8); // не дольше 8с реального звука
+
+  // Несколько осцилляторов для богатого тембра
+  const freqs = [
+    profile.pitch,
+    profile.pitch * 1.5,
+    profile.pitch * 2.0,
+    profile.pitch * 0.5,
+  ];
+
+  const masterGain = ctx.createGain();
+  masterGain.gain.setValueAtTime(0, ctx.currentTime);
+  masterGain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 0.05);
+  masterGain.gain.setValueAtTime(0.18, ctx.currentTime + playDur - 0.1);
+  masterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + playDur);
+  masterGain.connect(ctx.destination);
+
+  // Лёгкий reverb через delay
+  const delay = ctx.createDelay(0.3);
+  delay.delayTime.value = 0.06;
+  const delayGain = ctx.createGain();
+  delayGain.gain.value = 0.12;
+  masterGain.connect(delay);
+  delay.connect(delayGain);
+  delayGain.connect(ctx.destination);
+
+  freqs.forEach((freq, idx) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = idx === 0 ? "sine" : idx === 1 ? "triangle" : "sine";
+    osc.frequency.value = freq;
+
+    // Вибрато
+    const vibLfo = ctx.createOscillator();
+    const vibGain = ctx.createGain();
+    vibLfo.frequency.value = profile.vibrato;
+    vibGain.gain.value = freq * 0.012;
+    vibLfo.connect(vibGain);
+    vibGain.connect(osc.frequency);
+    vibLfo.start();
+    vibLfo.stop(ctx.currentTime + playDur);
+
+    // «Речевая» амплитудная модуляция — имитация слогов
+    const ampLfo = ctx.createOscillator();
+    const ampGain = ctx.createGain();
+    ampLfo.frequency.value = profile.speed * 3.5;
+    ampGain.gain.value = 0.35;
+    ampLfo.connect(ampGain);
+    ampGain.connect(gain.gain);
+    ampLfo.start();
+    ampLfo.stop(ctx.currentTime + playDur);
+
+    gain.gain.value = idx === 0 ? 0.5 : idx === 1 ? 0.25 * profile.timbre : 0.1;
+
+    osc.connect(gain);
+    gain.connect(masterGain);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + playDur);
+  });
+
+  // Закрыть контекст по окончании
+  window.setTimeout(() => {
+    ctx.close();
+    onEnd();
+  }, playDur * 1000 + 150);
+}
+
 // ── VOICE MESSAGE ──────────────────────────────────────────────────
-function VoiceMessage({ duration, color, isOutgoing }: { duration: number; color: string; isOutgoing: boolean }) {
+function VoiceMessage({ duration, color, isOutgoing, contactId }: {
+  duration: number;
+  color: string;
+  isOutgoing: boolean;
+  contactId: string;
+}) {
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const intervalRef = useRef<number>();
@@ -252,21 +340,28 @@ function VoiceMessage({ duration, color, isOutgoing }: { duration: number; color
     if (playing) {
       clearInterval(intervalRef.current);
       setPlaying(false);
-    } else {
-      setPlaying(true);
       setProgress(0);
-      const step = 100 / (duration * 10);
-      intervalRef.current = window.setInterval(() => {
-        setProgress((p) => {
-          if (p >= 100) {
-            clearInterval(intervalRef.current);
-            setPlaying(false);
-            return 0;
-          }
-          return p + step;
-        });
-      }, 100);
+      return;
     }
+
+    setPlaying(true);
+    setProgress(0);
+
+    // Запуск звука
+    playVoiceSound(isOutgoing ? "me" : contactId, duration, () => {});
+
+    // Прогресс-бар
+    const step = 100 / (duration * 10);
+    intervalRef.current = window.setInterval(() => {
+      setProgress((p) => {
+        if (p >= 100) {
+          clearInterval(intervalRef.current);
+          setPlaying(false);
+          return 0;
+        }
+        return p + step;
+      });
+    }, 100);
   };
 
   useEffect(() => () => clearInterval(intervalRef.current), []);
@@ -470,7 +565,7 @@ function ChatView({
                     <img src={contact.avatar} className="w-7 h-7 rounded-full object-cover mb-1 flex-shrink-0" />
                     <div className="msg-bubble-in rounded-2xl rounded-bl-sm px-3 py-2.5">
                       {msg.type === "voice"
-                        ? <VoiceMessage duration={msg.voiceDuration!} color={contact.color} isOutgoing={false} />
+                        ? <VoiceMessage duration={msg.voiceDuration!} color={contact.color} isOutgoing={false} contactId={contact.id} />
                         : <p className="text-white text-sm leading-relaxed">{msg.text}</p>
                       }
                       <p className="text-white/25 text-[10px] mt-1 text-right">{formatTime(msg.time)}</p>
@@ -481,7 +576,7 @@ function ChatView({
                 {isOut && (
                   <div className="msg-bubble-out rounded-2xl rounded-br-sm px-3 py-2.5">
                     {msg.type === "voice"
-                      ? <VoiceMessage duration={msg.voiceDuration!} color="#fff" isOutgoing={true} />
+                      ? <VoiceMessage duration={msg.voiceDuration!} color="#fff" isOutgoing={true} contactId="me" />
                       : <p className="text-white text-sm leading-relaxed">{msg.text}</p>
                     }
                     <div className="flex items-center justify-end gap-1 mt-1">
