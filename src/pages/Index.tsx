@@ -105,7 +105,7 @@ const CONTACTS: Contact[] = [
   {
     id: "gleb",
     name: "Глеб",
-    avatar: "https://cdn.poehali.dev/projects/ea83636a-a68e-4e72-812a-bdb87ba6eb9b/files/7f47c5b7-9162-4f37-9c4e-16aa88e3be33.jpg",
+    avatar: "https://cdn.poehali.dev/projects/ea83636a-a68e-4e72-812a-bdb87ba6eb9b/files/ffd68cdc-a62e-4c07-aa48-662da82b6098.jpg",
     status: "online",
     color: "#9B5CFF",
     gradientFrom: "#6B2FE8",
@@ -114,7 +114,7 @@ const CONTACTS: Contact[] = [
   {
     id: "mamulya",
     name: "Мамуля",
-    avatar: "https://cdn.poehali.dev/projects/ea83636a-a68e-4e72-812a-bdb87ba6eb9b/files/f110c235-1c38-4684-8a9c-bfbf730cb7b6.jpg",
+    avatar: "https://cdn.poehali.dev/projects/ea83636a-a68e-4e72-812a-bdb87ba6eb9b/files/12bcca5f-ffda-44f5-a913-2499e064c947.jpg",
     status: "online",
     color: "#FF5CF1",
     gradientFrom: "#C42FBE",
@@ -123,7 +123,7 @@ const CONTACTS: Contact[] = [
   {
     id: "papa",
     name: "Папа",
-    avatar: "https://cdn.poehali.dev/projects/ea83636a-a68e-4e72-812a-bdb87ba6eb9b/files/a9b1c82f-d671-4853-ba44-75967ba05ff9.jpg",
+    avatar: "https://cdn.poehali.dev/projects/ea83636a-a68e-4e72-812a-bdb87ba6eb9b/files/02d60b18-9da4-4014-90a0-6367f1bad8f1.jpg",
     status: "offline",
     lastSeen: "был 5 мин назад",
     color: "#5CF1FF",
@@ -133,7 +133,7 @@ const CONTACTS: Contact[] = [
   {
     id: "sestra",
     name: "Сестра",
-    avatar: "https://cdn.poehali.dev/projects/ea83636a-a68e-4e72-812a-bdb87ba6eb9b/files/a8abbd59-944d-4c85-9956-6dc31605099e.jpg",
+    avatar: "https://cdn.poehali.dev/projects/ea83636a-a68e-4e72-812a-bdb87ba6eb9b/files/2dc7746f-a367-449e-a66d-96340af4ef13.jpg",
     status: "online",
     color: "#FF8C5C",
     gradientFrom: "#FF5C2E",
